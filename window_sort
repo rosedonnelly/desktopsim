@@ -1,0 +1,11 @@
+/// When clicking a window behind the frontmost window, rearrange all window data so the clicked window is in front
+function window_sort() {
+	var Position;
+	Position = ds_list_find_index(objControl.window_list, id);
+	ds_list_delete(objControl.window_list, Position);
+	ds_list_insert(objControl.window_list, objControl.window_count-1, id);
+	//reset tiers
+	with objWindowParent {
+	    tier = ds_list_find_index(objControl.window_list, id);
+	}
+}
