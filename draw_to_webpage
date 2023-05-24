@@ -1,13 +1,16 @@
-/// take plaintext from external data files, run through the parsing script, and create a custom texture that can be drawn to the screen (inside pop-up windows)
+/// take plaintext from external data files, run through the parsing script, and create a custom texture that can be drawn to the screen (inside a "browser" pop-up window)
 function draw_to_webpage() {
+	//reset data structure containing hyperlink data
 	links_ds_clear();
 
 	with objControl {
+	//if our surface's data has been lost (when changing screen size etc), reinitiate it
 	    if !surface_exists(surf_webpage) {
 	        setup_webpage();
 	    }
+	    //clear the surface
 	    surface_set_target(surf_webpage);
-	    draw_clear(bg_color[0]); //change the fixed integer in the array to the dynamic value of the page index
+	    draw_clear(bg_color[0]); //change the fixed integer in the array to the dynamic value of the page index if I need to
         
 	    var lastline, count;
 	    lastline = 0; //height of the last line of text
