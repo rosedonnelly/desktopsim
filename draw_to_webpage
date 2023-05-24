@@ -1,0 +1,85 @@
+/// take plaintext from external data files, run through the parsing script, and create a custom texture that can be drawn to the screen (inside pop-up windows)
+function draw_to_webpage() {
+	links_ds_clear();
+
+	with objControl {
+	    if !surface_exists(surf_webpage) {
+	        setup_webpage();
+	    }
+	    surface_set_target(surf_webpage);
+	    draw_clear(bg_color[0]); //change the fixed integer in the array to the dynamic value of the page index
+        
+	    var lastline, count;
+	    lastline = 0; //height of the last line of text
+	    count = array_height_2d(log_web);
+	    for(var i = 0; i < count; i++) {
+	        var str, spr, linetype, font, fontcolor, box, boxcolor, img, img_max, padding, bc1, bc2, bc3, bc4;
+	        str = log_web[i, 0];
+	        spr = asset_get_index(log_web[i, 1]);
+	        linetype = log_web[i, 2];
+	        font = asset_get_index(log_web[i, 3]);
+	        fontcolor = log_web[i, 4];
+	        box = log_web[i, 5];
+	        boxcolor = log_web[i, 6]; //box color -- add extra lookups to the .ini later for gradients
+	        //animate images
+	        img = global.timer;
+	        padding = 16;
+        
+	        if linetype == 0 { //text
+	            var top, bottom, left, right;
+	            top = lastline + (padding * 1.5);
+	            bottom = lastline + string_height_ext(string_hash_to_newline(str), 16, 496) + (padding * 2.5);
+	            left = 0;
+	            right = surface_get_width(surf_webpage);
+	            if box == 1 {
+	                draw_set_colour(boxcolor);
+	                draw_rectangle(left, top, right, bottom, 0);
+	            }
+	            draw_set_font(font)
+	            text_parse(16, 16 + lastline + padding, str, log_web[i, 7], fontcolor, 472);
+	            //draw_text(16, 16 + top, str);
+	            var str_plain = string_subtract_tags(str);
+	            lastline += string_height_ext(string_hash_to_newline(str_plain), 16, 496) + padding; //update the variable
+	        }
+        
+	        if linetype == 1 { //image
+	            var top, bottom, left, right;
+	            top = lastline;
+	            bottom = lastline + sprite_get_height(spr) + (padding * 2);
+	            left = 0;
+	            right = surface_get_width(surf_webpage);
+	            if box == 1 {
+	                draw_set_colour(boxcolor);
+	                draw_rectangle(left, top, right, bottom, 0);
+	            }
+	            //alignment
+	            var align, add_x;
+	            align = log_web[i, 7];
+	            add_x = 0;
+	            switch(align) {
+	                case "left":
+	                    add_x = 0;
+	                    break;
+	                case "center":
+	                    add_x = 252 - (sprite_get_width(spr)/2) - 16;
+	                    break;
+	            }
+	            draw_sprite(spr, global.timer, 16 + add_x, 16 + lastline + padding);
+	            lastline = lastline + sprite_get_height(spr) + padding; //update the variable
+	        }
+	    }  
+	    draw_set_colour(n_white);
+	    draw_set_font(fontBasic);
+    
+	    if instance_exists(objWindowInternaut) {
+	        with(objWindowInternaut) {
+	            max_scroll = lastline + (padding * 2);
+	        }
+	    }
+    
+	    surface_reset_target();
+	}
+
+
+
+}
