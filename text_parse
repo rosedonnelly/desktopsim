@@ -1,0 +1,174 @@
+/// Parse text from plaintext into formatted text with my custom markup 
+/// @description text_parse(x, y, string, halign, color, max width)
+/// @param x
+/// @param  y
+/// @param  string
+/// @param  halign
+/// @param  color
+/// @param  max width
+function text_parse(argument0, argument1, argument2, argument3, argument4, argument5) {
+  //initiate variables
+	var xx, yy, input, input_parsed, output, char_count, char_count_parsed, char_position, tag_count, tag_switch, w, current_color, halign, col, underline, my_sprite, max_width;
+	xx = argument0; //x-value
+	yy = argument1; //y-value
+	input = argument2; //string to parse
+	max_width = argument5;
+	input_parsed = input; //parsed string
+	char_count = string_length(input);
+	char_count_parsed = string_length(input);
+	char_position = 0; //position as we move through the input character-by-character
+	tag_count = 0; //the number of formatting tags
+	output = ""; //string fed through parsing
+	tag_switch = 0;
+	w = 0; //string width
+	current_color = argument4; //color of our current character
+	halign = argument3; //horizontal alignment of text
+	underline = 0;
+	my_sprite = 0;
+  
+  //pretty much the same as text vars but for images
+	var img_write, img_sprite, img_x, img_y, link_write, link_url, link_x1, link_x2, link_y1, link_y2;
+	img_write = 0;
+	img_sprite = 0;
+	img_x = 0;
+	img_y = 0;
+	link_write = "";
+	link_url = "";
+	link_x1 = 0;
+	link_x2 = 0;
+	link_y1 = 0;
+	link_y2 = 0;
+
+	var max_height = string_height(string_hash_to_newline("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")); //tallest letter in our font
+
+	//string containing no tags for formatting
+	var str_delete, delete_count, end_loop; //characters to delete
+	delete_count = 0;
+	//end_loop = 0; //switch this when the string is over
+	for(var i = 1; i < char_count + 1; i++) {
+	    if string_char_at(input, i) == "[" {
+	        str_delete = 0;
+	            for(var j = 1; string_char_at(input, i + j) != "]"; j++) {
+	                str_delete++;
+	        }
+	        str_delete+=2;
+	        input_parsed = string_delete(input_parsed, i - delete_count, str_delete);
+	        delete_count += str_delete;
+	        char_count_parsed -= str_delete;
+	    }
+	}
+
+	var modify_y = 0;
+	//draw the input
+	for(i = 1; i < char_count + 1; i++) {
+	    var sprite_height_add = 0;
+	    tag_switch = 0; //reset the switch
+	    var mychar, tag_type;
+	    mychar = string_char_at(input, i);
+	    tag_type = string_char_at(input, i+1);
+	    if mychar == "[" {
+	        var tag_content, tag_length;
+	        tag_content = "";
+	        tag_length = 3;
+	        for(j = 3; string_char_at(input, i + j) != "]"; j++) {
+	            tag_content += string_char_at(input, i + j);
+	            tag_length++;
+	        }
+	        switch(tag_type) {
+	            case "c":
+	                current_color = real(tag_content);
+	                underline = 0;
+	                break;
+	            case "i":
+	                img_write = 1;
+	                img_sprite = asset_get_index(tag_content);
+	                img_x = xx+w;
+	                img_y = yy+modify_y;
+	                w += sprite_get_width(img_sprite);
+	                if sprite_get_height(img_sprite) > max_height {
+	                    sprite_height_add += sprite_get_height(my_sprite) - max_height;
+	                }
+	                break;
+	            case "l":
+	                current_color = c_blue;
+	                underline = 1;
+	                var end_loop = 0;
+	                for (var loop = 0; end_loop = 0; loop++) {
+	                    if string_copy(input, i+j+loop, 1) == "[" {
+	                        end_loop = 1;
+	                    }
+	                }
+	                link_write = string_copy(input, i+j, loop);
+	                link_url = string(tag_content);
+	                var link_h, link_w;
+	                link_h = string_height(string_hash_to_newline(link_write));
+	                link_w = string_width(string_hash_to_newline(link_write));
+	                link_x1 = xx + w;
+	                link_x2 = xx + w + link_w;
+	                link_y1 = yy + modify_y;
+	                link_y2 = yy + modify_y + link_h;
+	                break;
+	        }
+	        tag_count += 1;
+	        i += tag_length;
+	        tag_switch = 1;
+	    } else {
+	        if !tag_switch {
+	            output += mychar;
+	            char_position++;
+	        }
+	        //text alignment
+	        var modify_x;
+	        modify_x = 0;
+	        modify_x_plus = 0;
+	        switch(halign) {
+	            case "left":
+	                modify_x = 0;
+	                break;
+	            case "center":
+	                if string_width(string_hash_to_newline(input_parsed)) < 472 {
+	                    modify_x = ((504 - xx)/2) - (string_width(string_hash_to_newline(input_parsed))/2);
+	                    modify_x_plus = modify_x;
+	                } else {
+	                    modify_x = 0;
+	                    modify_x_plus = modify_x;
+	                }
+	                break;
+	        }
+	        //line breaks
+	        if w + string_width(string_hash_to_newline(mychar)) > max_width || mychar == "#" {
+	            if my_sprite != 0 {
+	                modify_y += sprite_height_add;
+	            } else {
+	                modify_y += max_height;
+	            }
+	            w = 0;
+	            modify_x_plus = modify_x;
+	        }
+	        //add tags to the ds
+	        if link_write != "" {
+	            link_x1 += modify_x_plus;
+	            link_x2 += modify_x_plus;
+	            links_ds_add(link_x1, link_x2 - string_width(string_hash_to_newline(mychar)), link_y1, link_y2, link_url);
+	            link_write = "";
+	            link_x1 = 0;
+	            link_x2 = 0;
+	            link_y1 = 0;
+	            link_y2 = 0;
+	        }
+	        //draw sprites
+	        if img_write != 0 {
+	            img_x += modify_x_plus;
+	            img_write = 0;
+	            draw_sprite(img_sprite, 0, img_x - string_width(string_hash_to_newline(mychar)), img_y);
+	        }
+	        //draw the character
+	        draw_set_colour(current_color);
+	        draw_text(xx+w+modify_x_plus, yy + modify_y, string_hash_to_newline(mychar));
+	        if underline {
+	            draw_line(xx+w+modify_x_plus, yy+modify_y+max_height, xx+w+modify_x_plus+string_width(string_hash_to_newline(mychar)), yy+modify_y+max_height);
+	        }
+	        w += string_width(string_hash_to_newline(mychar));
+	    }
+	}
+}
