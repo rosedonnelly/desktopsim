@@ -1,0 +1,41 @@
+/// Create a popup window
+/// @description window_create(what kind of window, extra info for files (otherwise leave as empty string));
+/// @param what kind of window
+/// @param  extra info for files (otherwise leave as empty string
+function window_create(argument0, argument1, argument2) {
+	if !instance_exists(argument0) {
+	    with objControl {
+	        new_window = instance_create(96 + (window_count * 16), 16 + (window_count * 16), argument0);
+	        with new_window { //pass on extra info
+	            if argument1 != "" {
+	                my_info = argument1;
+	            }
+	            if argument2 != 0 {
+	                my_image = argument2;
+	                name = argument1;
+	            }
+	        }
+	        //reset the surface with custom info if there is any
+	        if argument1 != "" {
+	            with(objControl) {
+	                setup_file(argument1);
+	            }
+	        }
+	        //reset the surface with custom image if there is one
+	        if argument2 != 0 {
+	            with(objControl) {
+	                setup_image(argument2);
+	            }
+	        }
+        
+	        window_count += 1;
+	        ds_list_add(window_list, new_window.id);
+	        with objWindowParent {
+	            tier = ds_list_find_index(other.window_list, id);
+	        }
+	    }
+	}
+
+
+
+}
